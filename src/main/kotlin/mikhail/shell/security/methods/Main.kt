@@ -1,5 +1,7 @@
 package mikhail.shell.web.application.mikhail.shell.security.methods
 
+import mikhail.shell.security.methods.Server
+import mikhail.shell.security.methods.User
 import java.math.BigInteger
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -10,6 +12,12 @@ val random = SecureRandom()
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 fun main() {
 
+    val server = Server()
+    val alice = User(1)
+    val bob = User(2)
+    alice.connect(server)
+    bob.connect(server)
+    alice.handshake()
 }
 
 fun generateSecretKey(q: BigInteger): BigInteger {
