@@ -41,11 +41,6 @@ fun main() {
 
     println("Общий секрет (вычисленный A): $sharedSecretA")
     println("Общий секрет (вычисленный B): $sharedSecretB")
-    if (sharedSecretA == sharedSecretB)
-        println("Общий секрет успешно установлен!")
-    else
-        println("Ошибка: вычисленные общие секреты не совпадают!")
-    println()
 
     try {
         val digest = MessageDigest.getInstance("SHA-256")
@@ -53,9 +48,16 @@ fun main() {
         val hash = digest.digest(secretBytes)
         println("Результирующий ключ K (SHA-256 от общего секрета):")
         println(hash.joinToString("") { "%02x".format(it) })
+        val hashBigInteger = BigInteger(1, hash)
+        println(hashBigInteger)
     } catch (e: Exception) {
         e.printStackTrace()
     }
+    if (sharedSecretA == sharedSecretB)
+        println("Общий секрет успешно установлен!")
+    else
+        println("Ошибка: вычисленные общие секреты не совпадают!")
+    println()
 }
 
 fun generateSecretKey(q: BigInteger): BigInteger {
