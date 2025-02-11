@@ -65,28 +65,58 @@ class Lab1Tests {
 
     @Test
     fun MQVProtocolTest() {
+        println("====== Параметры протокола =====")
         val q = generatePrime(256)
+        println("q = $q")
         val l = q.bitLength() / 2
+        println("l = $l")
         val p = generateSafePrime(q)
+        println("p = $p")
+
+        println("==== Долговременные секретные ключи =====")
         val a = generateSecretKey(q)
+        println("a = $a")
         val b = generateSecretKey(q)
+        println("b = $b")
+        println("===== Генератор циклической подгруппы  ====")
         val g = findGenerator(p, q)
+        println("g = $g")
+        println("==== Долговременные открытые ключи =====")
         val A = g.modPow(a, p)
+        println("A = $A")
         val B = g.modPow(b,p)
+        println("B = $B")
+
+        println("==== Сеансовые секретные ключи =====")
         val x = generateSecretKey(q)
+        println("x = $x")
         val y = generateSecretKey(q)
+        println("y = $y")
+        println("==== Сеансовые открытые ключи =====")
         val X = g.modPow(x, p)
+        println("X = $X")
         val Y = g.modPow(y, p)
+        println("Y = $Y")
         val h = BigInteger.TWO.pow(l)
+
+        println("==== Оба пользователя вычисляют d и e =====")
         val d = h + X.mod(h)
+        println("d = $d")
         val e = h + Y.mod(h)
+        println("e = $e")
+
+
+        println("==== Оба пользователя вычисляют общий секретный ключ =====")
         val SA = (Y * B.modPow(e, p)).modPow((x + d * a).mod(q), p)
+        println("SA = $SA")
         val SB = (X * A.modPow(d, p)).modPow((y + e * b).mod(q), p)
+        println("SB = $SB")
         val md = MessageDigest.getInstance("SHA-256")
+        println("==== Хэш общего ключа =====")
         val K1 = md.digest(SA.toByteArray()).joinToString("") { "%02x".format(it) }
+        println("K1 = $K1")
         val K2 = md.digest(SB.toByteArray()).joinToString("") { "%02x".format(it) }
-        println(K1)
-        println(K2)
+        println("K2 = $K2")
         if (K1 == K2) {
             println("Ключи совпадают")
         }
