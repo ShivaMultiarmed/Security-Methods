@@ -14,7 +14,6 @@ fun main() {
     val p = generateSafePrime(q)
     val g = findGenerator(p, q)
 
-    val random = SecureRandom()
     val x = generateSecretKey(q)
     val y = generateSecretKey(q)
 
@@ -69,49 +68,33 @@ fun generateSecretKey(q: BigInteger): BigInteger {
 
 // Генерирует простое число длины bits
 fun generatePrime(bits: Int): BigInteger {
-    return BigInteger(bits, 100, random) // Reduced certainty to 10 for speed
+    return BigInteger(bits, 100, random)
 }
 
 // Генерирует 1024-bit простое число p = kq + 1
 fun generateSafePrime(q: BigInteger): BigInteger {
     var p: BigInteger
     do {
-        val k = BigInteger(768, random).setBit(767) // Ensure k is large enough
+        val k = BigInteger(768, random).setBit(767) // Гарантирует единицу в самом старшем бите, а следовательно число становится достаточно большим.
         p = k.multiply(q).add(BigInteger.ONE)
-    } while (!p.isProbablePrime(100)) // Reduced certainty to 10
+    } while (!p.isProbablePrime(100))
     return p
 }
 
 // Ищет генератор для подгруппы порядка q
 fun findGenerator(p: BigInteger, q: BigInteger): BigInteger {
-    val one = BigInteger.ONE
-    val exponent = (p - one) / q
-
-//    // Сначала пробуем набор известных малых кандидатов.
-//    val smallCandidates = listOf(
-//        BigInteger("2"),
-//        BigInteger("3"),
-//        BigInteger("5"),
-//        BigInteger("7"),
-//        BigInteger("11")
-//    )
-//    for (g in smallCandidates) {
-//        if (g.modPow(exponent, p) != one) {
-//            return g
-//        }
-//    }
-
-    // Если стандартные кандидаты не подошли,
-    // перебираем случайные значения из диапазона [2, p-2].
-    val maxAttempts = 1000
-    for (i in 0..<maxAttempts) {
-        // Получаем случайное число, используя битовую длину p.
-        // Чтобы число оказалось в диапазоне [2, p-2], берем остаток от деления на (p-3)
-        // и прибавляем 2.
-        val candidate = (BigInteger(p.bitLength(), random) % (p - BigInteger.valueOf(3))) + BigInteger.TWO
-        if (candidate.modPow(exponent, p) != one) {
-            return candidate
+    // t = (p-1)/q
+    val t = (p - BigInteger.ONE) / q
+    val maxAttempts = 1_000_000
+    for (i in 0 until maxAttempts) {
+        // Выбираем случайное число r в диапазоне [2, p-2].
+        val r = (BigInteger(p.bitLength(), random) % (p - BigInteger.valueOf(3))) + BigInteger.TWO
+        // Вычисляем g = r^t mod p. Тогда g принадлежит подгруппе порядка q, поскольку g^q = r^(t*q) = r^(p-1) ≡ 1 mod p.
+        val g = r.modPow(t, p)
+        // Если g не равно 1, то оно является нетривиальным элементом подгруппы (а в циклической подгруппе порядка q любой нетривиальный элемент является её генератором).
+        if (g != BigInteger.ONE) {
+            return g
         }
     }
-    throw RuntimeException("Не удалось найти генератор подгруппы порядка q за $maxAttempts попыток")
+    throw RuntimeException("Не удалось найти генератор циклической подгруппы порядка q за $maxAttempts попыток")
 }
